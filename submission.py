@@ -5,6 +5,7 @@ purposes. The Driverless Car project was developed at Stanford, primarily by
 Chris Piech (piech@cs.stanford.edu). It was inspired by the Pacman projects.
 '''
 import collections
+import copy
 import math
 import random
 import util
@@ -52,7 +53,16 @@ class ExactInference(object):
 
     def observe(self, agentX: int, agentY: int, observedDist: float) -> None:
         # BEGIN_YOUR_CODE (our solution is 7 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        for x in range(self.belief.numCols):
+            for y in range(self.belief.numRows):
+                X=util.colToX(x)
+                Y=util.rowToY(y)
+                u=self.belief.getProb(y,x) * util.pdf(((X-agentX)**2+(Y-agentY)**2)**0.5,Const.SONAR_STD,observedDist)
+                self.belief.setProb(y,x,u)
+        self.belief.normalize()
+
+
+
         # END_YOUR_CODE
 
     ##################################################################################
@@ -79,7 +89,18 @@ class ExactInference(object):
         if self.skipElapse: ### ONLY FOR THE GRADER TO USE IN Problem 1
             return
         # BEGIN_YOUR_CODE (our solution is 7 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        old =dict()
+        for x in range(self.belief.getNumCols()):
+            for y in range(self.belief.getNumRows()):
+                old[(y,x)]=self.belief.getProb(y,x)
+                self.belief.setProb(y, x, 0)
+        for element in self.transProb:
+            old_c=element[0]
+            new_c=element[1]
+            u=old[old_c] * self.transProb[(old_c,new_c)]
+            self.belief.addProb(new_c[0],new_c[1],u)
+        self.belief.normalize()
+
         # END_YOUR_CODE
 
     # Function: Get Belief
@@ -181,9 +202,25 @@ class ParticleFilter(object):
     ##################################################################################
     def observe(self, agentX: int, agentY: int, observedDist: float) -> None:
         # BEGIN_YOUR_CODE (our solution is 11 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        weight={}
+        flat_weight={}
+        for particle in self.particles:
+            y = util.rowToY(particle[0])
+            x = util.colToX(particle[1])
+            weight[particle]=util.pdf(((x - agentX) ** 2 + (y - agentY) ** 2) ** 0.5, Const.SONAR_STD,observedDist)*self.particles[particle]
+            #for i in range(self.particles[particle]):
+            #    flat_weight[(particle,i)]=weight[particle]
+        new_res= {}
+        for i in range(self.NUM_PARTICLES):
+#            el=util.weightedRandomChoice(flat_weight)
+#            el=el[0]
+            el = util.weightedRandomChoice(weight)
+            if el not in new_res:
+                new_res[el] = 0
+            new_res[el]+=1
+            print(i)
+        self.particles=new_res
         # END_YOUR_CODE
-
         self.updateBelief()
 
     ##################################################################################
@@ -211,9 +248,19 @@ class ParticleFilter(object):
     ##################################################################################
     def elapseTime(self) -> None:
         # BEGIN_YOUR_CODE (our solution is 6 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
-        # END_YOUR_CODE
+            next_part={}
+            for particle in self.particles:
+                for i in range(self.particles[particle]):
+                    next=util.weightedRandomChoice(self.transProbDict[particle])
+                    if next not in next_part:
+                        next_part[next]=0
+                    next_part[next]=+1
+            self.particles=next_part
 
+
+
+
+        # END_YOUR_CODE
     # Function: Get Belief
     # ---------------------
     # Returns your belief of the probability that the car is in each tile. Your
