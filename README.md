@@ -3,7 +3,8 @@ AI model to track car traffic using Bayesian Networks
 
 
 
--> python drive.py -l lombard -i none
+-> python drive.py -a -i  particleFilter -l lombard -d
+
 
 You can steer by either using the arrow keys or 'w', 'a', and 'd'.
 The up key and 'w' accelerates your car forward, the left key and 'a' turns the steering wheel to the left, 
